@@ -16,7 +16,7 @@ Five commands have been implemented:
 * EXIT
 
 ## Instructions
-The makefile stores object files in [obj]() and executables in [run](). Run the following command in the directory where you clone this repo to compile the code.
+The makefile stores object files in *obj/* and executables in [run](https://github.com/nimbid/Reliable-UDP-Based-File-Transfer/tree/main/run). Run the following command in the directory where you clone this repo to compile the code.
 ```
 make
 ```
