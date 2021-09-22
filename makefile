@@ -19,7 +19,7 @@ CLIENT = Client
 # before any of the targets are run.
 $(shell mkdir -p $(OBJ))
 
-all			        : $(RUN)/uftp_client $(RUN)/uftp_server
+all                 : $(RUN)/uftp_client $(RUN)/uftp_server
 
 $(RUN)/uftp_client  : $(OBJ)/uftp_client.o
 					$(CC) -o $(RUN)/uftp_client $(OBJ)/uftp_client.o
