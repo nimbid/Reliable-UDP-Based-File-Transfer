@@ -15,6 +15,10 @@ CLIENT = Client
 # obj/ --> want uftp_server.o and uftp_client.o to be here.
 # run/ --> want uftp_server and uftp_client execs to be here.
 
+# Create obj/ if not already present. This will run when make is parsed
+# before any of the targets are run.
+$(shell mkdir -p $(OBJ))
+
 all			        : $(RUN)/uftp_client $(RUN)/uftp_server
 
 $(RUN)/uftp_client  : $(OBJ)/uftp_client.o
