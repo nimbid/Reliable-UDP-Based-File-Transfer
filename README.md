@@ -25,13 +25,17 @@ Once the compilation is done, the server and the client executables can be run i
 
 ### Server
 ```
-filepath/run/uftp_server
+filepath/run/uftp_server [Port Number] 
 ```
+*Port Number* must be greater than 5000.
 
 ### Client
 ```
-filepath/run/uftp_client
+filepath/run/uftp_client [Server IP Address] [Server Port Number]
 ```
+
+### Running commands on the client
+
 **NOTE**: In the above commands, 'filepath' must be replaced by the path on your system, based on your current directory. This is especially important for the *LS* command as the server lists its current directory based on where it is running (where it was called from).
 
 ## Results
