@@ -207,14 +207,14 @@ int main(int argc, char **argv)
                 {
                     num_frames = (file_size / BUFFSIZE);
                 }
-                // printf("Packets to send: %ld\n", num_frames);
+                printf("Packets to send: %ld\n", num_frames);
 
                 // Advertise no. of packets to be sent to the receiver.
                 sendto(fd, &num_frames, sizeof(num_frames), 0, (struct sockaddr *) &cln_addr, cln_addrlen);
 
                 // Check if the client received the expected no. of frames to be sent.  
                 recvfrom(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *) &cln_addr, (socklen_t *) &cln_addrlen);
-                // printf("Recd frames ack %d\n", outer_ack);
+                printf("Recd frames ack %d\n", outer_ack);
 
                 // Check for ACK sent by server for frames.
                 if (outer_ack <= 0)
@@ -335,7 +335,7 @@ int main(int argc, char **argv)
                             rcvd_bytes += frame.len;
                         }
                         
-                        // printf("Frame %ld received.\n", frame.id);
+                        printf("Frame %ld received.\n", frame.id);
                     }
 
                     printf("File received: %ld bytes.", rcvd_bytes);
@@ -366,7 +366,7 @@ int main(int argc, char **argv)
 
                 // Receive no. of bytes/MD5 to compare later.
                 recvfrom(fd, &(frames_to_receive), sizeof(frames_to_receive), 0, (struct sockaddr *) &cln_addr, (socklen_t *) &cln_addrlen); 
-                // printf("Frames to receive: %ld\n", frames_to_receive);
+                printf("Frames to receive: %ld\n", frames_to_receive);
                 
                 // Disable timeout.
                 t_out.tv_sec = 0;
@@ -400,7 +400,7 @@ int main(int argc, char **argv)
                             rcvd_bytes += frame.len;
                         }
             
-                        // printf("Frame %ld received.\n", frame.id);
+                        printf("Frame %ld received.\n", frame.id);
                     }
 
                     printf("File received: %ld bytes.\n", rcvd_bytes);

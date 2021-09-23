@@ -21,7 +21,7 @@
 
 
 #define BUFFSIZE (51200)
-#define TIMEOUT  (8)
+#define TIMEOUT  (10)
 #define RETRY_LIMIT (30)
 
 
@@ -220,7 +220,7 @@ int main(int argc, char **argv)
                             rcvd_bytes += frame.len;
                         }
 
-                        // printf("Frame %ld received.\n", frame.id);
+                        printf("Frame %ld received.\n", frame.id);
                     }
 
                     printf("File received; size is %ld bytes.\n", rcvd_bytes);
@@ -240,7 +240,7 @@ int main(int argc, char **argv)
                 
                 // Receive no. of bytes.
                 my_recv_from(fd, &frames_to_receive, sizeof(frames_to_receive), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen);
-                // printf("Frames to receive: %ld\n", frames_to_receive);
+                printf("Frames to receive: %ld\n", frames_to_receive);
 
                 if (frames_to_receive > 0)
                 {   
