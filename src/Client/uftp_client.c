@@ -323,7 +323,7 @@ int main(int argc, char **argv)
                 }
                 // Store file size of the file to be fetched.
                 file_size = st.st_size; 
-                printf("File size: %lld\n", file_size); // This works on MacOS but Linux requires a %ld.
+                printf("File size: %ld\n", file_size); // This works on MacOS but Linux requires a %ld.
 
                 // Open the file.
                 file_ptr = fopen(snd_filename, "rb");
