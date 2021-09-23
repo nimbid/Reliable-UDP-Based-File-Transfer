@@ -302,7 +302,7 @@ int main(int argc, char **argv)
 
                 // Receive no. of bytes.
                 recvfrom(fd, &(frames_to_receive), sizeof(frames_to_receive), 0, (struct sockaddr *) &cln_addr, (socklen_t *) &cln_addrlen); 
-                // printf("Frames to receive: %ld\n", frames_to_receive);
+                printf("Frames to receive: %ld\n", frames_to_receive);
                 // Disable timeout.
                 t_out.tv_sec = 0;
 			    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&t_out, sizeof(struct timeval)); 

@@ -337,14 +337,14 @@ int main(int argc, char **argv)
                 {
                     num_frames = (file_size / BUFFSIZE);
                 }
-                // printf("Packets to send: %ld\n", num_frames);
+                printf("Packets to send: %ld\n", num_frames);
 
                 // Advertise no. of packets to be sent to the receiver.
                 sendto(fd, &num_frames, sizeof(num_frames), 0, (struct sockaddr *)&srv_addr, srv_addrlen);
 
                 // Check if the server received the expected no. of frames to be sent.
                 my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen);
-                // printf("Recd frames ack %d\n", outer_ack);
+                printf("Recd frames ack %d\n", outer_ack);
 
                 // Check for ACK sent by server for frames.
                 if (outer_ack == failure_ack)
