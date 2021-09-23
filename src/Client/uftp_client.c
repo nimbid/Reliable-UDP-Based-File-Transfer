@@ -20,7 +20,7 @@
 #include <time.h>
 
 
-#define BUFFSIZE (2048)
+#define BUFFSIZE (51200)
 #define TIMEOUT  (4)
 #define RETRY_LIMIT (30)
 
@@ -94,10 +94,10 @@ int main(int argc, char **argv)
     }
 
     struct sockaddr_in srv_addr;           // Server address.
-    struct sockaddr_in cln_addr;           // Client address.
+	struct sockaddr_in cln_addr;           // Client address.
     socklen_t srv_addrlen = sizeof(srv_addr);  // Length of addresses.
-    
-    int fd;				                   // Server socket.
+
+	int fd;				                   // Server socket.
     struct stat st;                        // Stores the file attributes for GET.
     off_t file_size;                       // File size.
     frame_t frame;                         // Structure for storing message frames.
@@ -121,22 +121,22 @@ int main(int argc, char **argv)
 
     // Bind the socket to a valid client IP address and port.
     memset(&cln_addr, 0, sizeof(cln_addr));
-    cln_addr.sin_family = AF_INET;
-    cln_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    cln_addr.sin_port = htons(0);
+	cln_addr.sin_family = AF_INET;
+	cln_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	cln_addr.sin_port = htons(0);
 
     // Print error if bind fails.
     if (bind(fd, (struct sockaddr *)&cln_addr, sizeof(cln_addr)) < 0) 
-    {   
-        print_error("Bind failed.\n");
-        return 0;
-    }
+    {
+		print_error("Bind failed.\n");
+		return 0;
+	}
 
     // Set server address and port.
     memset(&srv_addr, 0, sizeof(srv_addr));
     srv_addr.sin_family = AF_INET;
-    srv_addr.sin_addr.s_addr = inet_addr(argv[1]);
-    srv_addr.sin_port = htons(atoi(argv[2]));
+	srv_addr.sin_addr.s_addr = inet_addr(argv[1]);
+	srv_addr.sin_port = htons(atoi(argv[2]));
 
     printf("Client started.\n");
 
@@ -323,7 +323,7 @@ int main(int argc, char **argv)
                 }
                 // Store file size of the file to be fetched.
                 file_size = st.st_size; 
-                printf("File size: %ld\n", file_size);
+                printf("File size: %lld\n", file_size); // This works on MacOS but Linux requires a %ld.
 
                 // Open the file.
                 file_ptr = fopen(snd_filename, "rb");
