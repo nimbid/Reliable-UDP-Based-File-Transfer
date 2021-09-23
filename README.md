@@ -39,7 +39,7 @@ Once the compilation is done, the server and the client executables can be run i
 **NOTE**: In the above commands, 'filepath' must be replaced by the path on your system, based on your current directory. This is especially important for the *LS* command as the server lists its current directory based on where it is running (where it was called from).
 
 ## Results
-The client and server have been tested to reliably transfer files up to 500 MB in a 1% packet loss environment.
+The client and server have been tested to reliably transfer files up to 100 MB in a 1% packet loss environment.
 
 ### Creating large files for testing
 The following command can be run to create an arbitrary file of a size of your choosing.
