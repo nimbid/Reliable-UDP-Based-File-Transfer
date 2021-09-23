@@ -270,7 +270,7 @@ int main(int argc, char **argv)
                             rcvd_bytes += frame.len;
                         }
 
-                        // printf("Frame %ld received.\n", frame.id);
+                        printf("Frame %ld received.\n", frame.id);
                     }
 
                     printf("File received; size is %ld bytes.\n", rcvd_bytes);
