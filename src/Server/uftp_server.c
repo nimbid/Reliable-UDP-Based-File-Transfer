@@ -269,6 +269,10 @@ int main(int argc, char **argv)
                 {
                     print_error("Error sending num_frames to server.\n");
                 }
+
+                // Set socket as non-blocking.
+                int flags = fcntl(fd, F_GETFL);
+                fcntl(fd, F_SETFL, flags | O_NONBLOCK);
                 
                 // If client ACKs expected no. of frames, proceed with sending data.
                 /* if possible add cumulative ack logic here for window size of 10 */
@@ -319,6 +323,10 @@ int main(int argc, char **argv)
                     // printf("Frame %ld; ACK %ld\n", frame.id, ack);
 
                 }
+
+                // Revert socket to blocking.
+                int flags = fcntl(fd, F_GETFL);
+                fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
 
                 printf("File sent succesfully: %ld bytes.\n", bytes_sent);
                 fclose(file_ptr);
