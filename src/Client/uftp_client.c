@@ -417,7 +417,7 @@ int main(int argc, char **argv)
                         if ((bytes_recvd < 0) || (frame.id != ack))
                         {
                             drops++;
-                            bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen, 1);
+                            bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);
                             retries++;
                             printf("Frame %ld dropped %d times; retries: %d.\n", frame.id, drops, retries);
                         } 
