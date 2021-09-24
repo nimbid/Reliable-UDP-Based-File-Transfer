@@ -79,7 +79,7 @@ static ssize_t my_recv_from(
             if (end - start > timeout)
             {   
                 if (no_timeout == 1)
-                {   
+                {   printf("No ACK for %ds\n", SHORT_TIMEOUT);
                     return -1;
                 }
                 else
