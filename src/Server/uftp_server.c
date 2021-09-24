@@ -23,6 +23,7 @@
 
 #define BUFFSIZE (51200)
 #define TIMEOUT  (8)
+#define SHORT_TIMEOUT (2)
 #define RETRY_LIMIT (30)
 
 
@@ -92,7 +93,7 @@ static int get_file_list(char *list)
 static ssize_t my_recv_from(
     int socket, void *restrict buffer, size_t length,
     int flags, struct sockaddr *restrict address,
-    socklen_t *restrict address_len, int no_timeout)
+    socklen_t *restrict address_len, int no_timeout, int timeout)
 {   
     ssize_t nbytes = 0;
     time_t start = 0, end = 0;
@@ -103,7 +104,7 @@ static ssize_t my_recv_from(
         {
             start = time(0);
         }
-        if (end - start > TIMEOUT)
+        if (end - start > timeout)
         {   
             if (no_timeout == 1)
             {
@@ -285,7 +286,7 @@ int main(int argc, char **argv)
                     // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
                     while (retries <= RETRY_LIMIT)
                     {   
-                        bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen, 1);
+                        bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen, 1, SHORT_TIMEOUT);
                         if ((bytes_recvd < 0) || (frame.id != ack))
                         {
                             drops++;
