@@ -414,6 +414,7 @@ int main(int argc, char **argv)
                     while (retries <= RETRY_LIMIT)
                     {   
                         bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen, 1);
+                        printf("Bytes recvd: %ld\n");
                         if ((bytes_recvd < 0) || (frame.id != ack))
                         {
                             drops++;
