@@ -22,7 +22,7 @@
 
 
 #define BUFFSIZE (51200)
-#define TIMEOUT  (8)
+#define TIMEOUT  (4)
 #define RETRY_LIMIT (30)
 
 
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
 
                 // Check if the client received the expected no. of frames to be sent.  
                 recvfrom(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *) &cln_addr, (socklen_t *) &cln_addrlen);
-                printf("Recd frames ack %d\n", outer_ack);
+                printf("Recd frames ACK: %d\n", outer_ack);
 
                 // Check for ACK sent by server for frames.
                 if (outer_ack <= 0)
@@ -268,27 +268,13 @@ int main(int argc, char **argv)
                     frame.id = i;
                     frame.len = fread(frame.data, 1, BUFFSIZE, file_ptr);
 
-                    // sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&cln_addr, cln_addrlen);                  // Send a frame.
-                    // recvfrom(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen);      // Receive a frame.
-
-                    // // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
-                    // while ((frame.id != ack) && (retries <= RETRY_LIMIT))
-                    // {   
-                    //     drops++;
-                    //     sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&cln_addr, cln_addrlen);
-                    //     recvfrom(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen);
-                    //     retries++;
-                    //     printf("Frame %ld dropped %d times; retries: %d.\n", frame.id, drops, retries);
-                    // }
-
-                    sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&cln_addr, cln_addrlen);                  // Send a frame.
+                    sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&cln_addr, cln_addrlen); // Send a frame.
                     printf("Frame no. %ld sent\n", frame.id);
 
                     // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
                     while (retries <= RETRY_LIMIT)
                     {   
                         bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen, 1);
-                        printf("Bytes recvd: %ld\n", bytes_recvd);
                         if ((bytes_recvd < 0) || (frame.id != ack))
                         {
                             drops++;
@@ -395,7 +381,7 @@ int main(int argc, char **argv)
                         printf("Frame %ld received.\n", frame.id);
                     }
 
-                    printf("File received: %ld bytes.", rcvd_bytes);
+                    printf("File received: %ld bytes.\n", rcvd_bytes);
                     fclose(file_ptr);
 
                 }
@@ -573,6 +559,7 @@ int main(int argc, char **argv)
             printf("Command received: %s for filename %s\n", rcvd_cmd,rcvd_filename);
 
             close(fd); // Close the socket.
+            printf("Closing the server.\n");
             exit(EXIT_SUCCESS);
         }
 

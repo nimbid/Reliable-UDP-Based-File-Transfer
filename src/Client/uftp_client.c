@@ -21,7 +21,7 @@
 
 
 #define BUFFSIZE (51200)
-#define TIMEOUT  (8)
+#define TIMEOUT  (4)
 #define RETRY_LIMIT (30)
 
 
@@ -549,6 +549,30 @@ int main(int argc, char **argv)
 
         else if (strcmp(snd_cmd, "exit") == 0)
         {   
+            // printf("Closing UDP client.\n");
+            // close(fd); // Close the socket.
+            // exit(EXIT_SUCCESS);
+
+
+
+            int ack = 0;
+            int failure_ack = -1;
+            printf("Closing the server.\n");
+
+            // Send DEL command to server.
+            if ((sendto(fd, rcvd_cmd, sizeof(rcvd_cmd), 0, (struct sockaddr *)&srv_addr, srv_addrlen) < 0))
+            {
+                print_error("Couldn't send command.\n");
+            }
+
+            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen,0); // Receive error.
+            // printf("ACK for command received: %d\n", ack);
+            if (ack == failure_ack)
+            {
+                print_error("No command received by server.\n");
+            }
+
+            // Closing the client.
             printf("Closing UDP client.\n");
             close(fd); // Close the socket.
             exit(EXIT_SUCCESS);
