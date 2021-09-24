@@ -288,7 +288,7 @@ int main(int argc, char **argv)
                         // Initialise frame struct with zeros.
                         memset(&frame, 0, sizeof(frame));
 
-                        my_recv_from(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen, 0); // Receive frame.
+                        my_recv_from(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen, 1); // Receive frame.
                         sendto(fd, &frame.id, sizeof(frame.id), 0, (struct sockaddr *)&srv_addr, srv_addrlen);           // Send ACK for frame.
 
                         // If frame ID is repeated, drop it. Keep track using i.
