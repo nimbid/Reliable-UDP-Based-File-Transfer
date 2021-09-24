@@ -24,12 +24,14 @@
 #define TIMEOUT  (8)
 #define RETRY_LIMIT (30)
 
+
 // Struct that forms a packet to be sent.
 typedef struct frame_s{
     char data[BUFFSIZE];
     long int id;
     long int len;
 }frame_t;
+
 
 // Helper function to print error messages to CLI.
 static void print_error(const char *message)
@@ -45,6 +47,7 @@ static void send_error(int socket, const struct sockaddr *dest_addr, socklen_t d
     int error_ack = -1;
     sendto(socket, &error_ack, sizeof(error_ack), 0, dest_addr, dest_len);
 }
+
 
 // Returns a list of files in given directory.
 static int get_file_list(char *list)
@@ -72,6 +75,37 @@ static int get_file_list(char *list)
     fclose(fp);
     closedir(dr);
     return 0;
+}
+
+
+static ssize_t my_recv_from(
+    int socket, void *restrict buffer, size_t length,
+    int flags, struct sockaddr *restrict address,
+    socklen_t *restrict address_len, int no_timeout)
+{   
+    ssize_t nbytes = 0;
+    time_t start = 0, end = 0;
+    while ((nbytes = recvfrom(socket, buffer, length, flags, address, address_len)) <= 0)
+    {   
+        end = time(0);
+        if (start == 0)
+        {
+            start = time(0);
+        }
+        if (end - start > TIMEOUT)
+        {   
+            if (no_timeout == 1)
+            {
+                return -1;
+            }
+            else
+            {
+                close(socket);
+                print_error("Timed out waiting for response from server.\n");
+            }
+        }
+    }
+    return nbytes;
 }
 
 
@@ -176,6 +210,7 @@ int main(int argc, char **argv)
                 int retries = 0;
                 int drops = 0;
                 int is_timed_out = 0;
+                long int bytes_recvd = 0;
 
                 if (stat(rcvd_filename, &st) < 0)
                 {
@@ -232,17 +267,38 @@ int main(int argc, char **argv)
                     frame.id = i;
                     frame.len = fread(frame.data, 1, BUFFSIZE, file_ptr);
 
+                    // sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&cln_addr, cln_addrlen);                  // Send a frame.
+                    // recvfrom(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen);      // Receive a frame.
+
+                    // // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
+                    // while ((frame.id != ack) && (retries <= RETRY_LIMIT))
+                    // {   
+                    //     drops++;
+                    //     sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&cln_addr, cln_addrlen);
+                    //     recvfrom(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen);
+                    //     retries++;
+                    //     printf("Frame %ld dropped %d times; retries: %d.\n", frame.id, drops, retries);
+                    // }
+
                     sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&cln_addr, cln_addrlen);                  // Send a frame.
-                    recvfrom(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen);      // Receive a frame.
+                    printf("Frame no. %ld sent\n", frame.id);
 
                     // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
-                    while ((frame.id != ack) && (retries <= RETRY_LIMIT))
+                    while (retries <= RETRY_LIMIT)
                     {   
-                        drops++;
-                        sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&cln_addr, cln_addrlen);
-                        recvfrom(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen);
-                        retries++;
-                        printf("Frame %ld dropped %d times; retries: %d.\n", frame.id, drops, retries);
+                        bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen, 1);
+                        printf("Bytes recvd: %ld\n", bytes_recvd);
+                        if ((bytes_recvd < 0) || (frame.id != ack))
+                        {
+                            drops++;
+                            sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&cln_addr, cln_addrlen);
+                            retries++;
+                            printf("Frame %ld dropped %d times; retries: %d.\n", frame.id, drops, retries);
+                        }
+                        else
+                        {
+                            break; // Got the correct ACK.
+                        }
                     }
 
                     if (retries == RETRY_LIMIT)
