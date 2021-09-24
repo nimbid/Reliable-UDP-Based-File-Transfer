@@ -79,6 +79,16 @@ static int get_file_list(char *list)
 }
 
 
+/* Custom implementation of recvfrom() that polls a non-blocking
+ * socket for data until timeout is reached.
+ *
+ * Special parameters: no_timeout-> 1 if function should not exit()
+ * on timeout; 0 otherwise.
+ * 
+ * On receiving data-> returns no. of bytes received.
+ * On timeout-> If no_timeout=0, exit with error.
+ *              If no_timeout=1, return -1.
+ */
 static ssize_t my_recv_from(
     int socket, void *restrict buffer, size_t length,
     int flags, struct sockaddr *restrict address,
@@ -212,6 +222,7 @@ int main(int argc, char **argv)
                 int drops = 0;
                 int is_timed_out = 0;
                 long int bytes_recvd = 0;
+                long int bytes_sent = 0;
 
                 if (stat(rcvd_filename, &st) < 0)
                 {
@@ -288,6 +299,8 @@ int main(int argc, char **argv)
                         }
                     }
 
+                    bytes_sent += frame.len;
+
                     if (retries == RETRY_LIMIT)
                     {
                         is_timed_out = 1;
@@ -306,7 +319,7 @@ int main(int argc, char **argv)
 
                 }
 
-                printf("File sent succesfully.\n");
+                printf("File sent succesfully: %ld bytes.\n", bytes_sent);
                 fclose(file_ptr);
                 t_out.tv_sec = 0;
                 t_out.tv_usec = 0;

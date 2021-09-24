@@ -48,37 +48,17 @@ static void send_error(int socket, const struct sockaddr *dest_addr, socklen_t d
     sendto(socket, &error_ack, sizeof(error_ack), 0, dest_addr, dest_len);
 }
 
+
 /* Custom implementation of recvfrom() that polls a non-blocking
- * socket for data until timeout is reached.  
+ * socket for data until timeout is reached.
+ *
+ * Special parameters: no_timeout-> 1 if function should not exit()
+ * on timeout; 0 otherwise.
  * 
  * On receiving data-> returns no. of bytes received.
- * On timeout-> closes the socket and exits with an error.
+ * On timeout-> If no_timeout=0, exit with error.
+ *              If no_timeout=1, return -1.
  */
-// static ssize_t my_recv_from(
-//     int socket, void *restrict buffer, size_t length,
-//     int flags, struct sockaddr *restrict address,
-//     socklen_t *restrict address_len)
-// {   
-//     ssize_t nbytes = 0;
-//     time_t start = 0, end = 0;
-//     while ((nbytes = recvfrom(socket, buffer, length, flags, address, address_len)) <= 0)
-//     {   
-//         if (errno == EWOULDBLOCK)
-//         {
-//             end = time(0);
-//             if (start == 0)
-//             {
-//                 start = time(0);
-//             }
-//             if (end - start > TIMEOUT)
-//             {
-//                 close(socket);
-//                 print_error("Timed out waiting for response from server.\n");
-//             }
-//         }
-//     }
-//     return nbytes;
-// }
 static ssize_t my_recv_from(
     int socket, void *restrict buffer, size_t length,
     int flags, struct sockaddr *restrict address,
@@ -211,7 +191,6 @@ int main(int argc, char **argv)
             }
 
             // Check if that file exists locally and has write permissions; else create a new file.
-            /* Change file writing logic later if needed */
             if ((access(snd_filename, F_OK) == 0) && access(snd_filename, W_OK) == 0)
             {   
                 // printf("Existing file block\n");
@@ -239,7 +218,7 @@ int main(int argc, char **argv)
                         memset(&frame, 0, sizeof(frame));
 
                         my_recv_from(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen, 0); // Receive frame.
-                        sendto(fd, &frame.id, sizeof(frame.id), 0, (struct sockaddr *)&srv_addr, srv_addrlen);           // Send ACK for frame.
+                        sendto(fd, &frame.id, sizeof(frame.id), 0, (struct sockaddr *)&srv_addr, srv_addrlen);                  // Send ACK for frame.
 
                         // If frame ID is repeated, drop it. Keep track using i.
                         if (frame.id != i)
@@ -289,7 +268,7 @@ int main(int argc, char **argv)
                         memset(&frame, 0, sizeof(frame));
 
                         my_recv_from(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen, 1); // Receive frame.
-                        sendto(fd, &frame.id, sizeof(frame.id), 0, (struct sockaddr *)&srv_addr, srv_addrlen);           // Send ACK for frame.
+                        sendto(fd, &frame.id, sizeof(frame.id), 0, (struct sockaddr *)&srv_addr, srv_addrlen);                  // Send ACK for frame.
 
                         // If frame ID is repeated, drop it. Keep track using i.
                         if (frame.id != i)
@@ -394,31 +373,18 @@ int main(int argc, char **argv)
                     frame.id = i;
                     frame.len = fread(frame.data, 1, BUFFSIZE, file_ptr);
 
-                    // bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);    // Send a frame.
-                    // printf("Frame no. %ld sent\n", frame.id);
-                    // my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen);      // Receive a frame.
-
-                    // // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
-                    // while ((frame.id != ack) && (retries <= RETRY_LIMIT))
-                    // {   
-                    //     drops++;
-                    //     bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);
-                    //     my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen);
-                    //     retries++;
-                    //     printf("Frame %ld dropped %d times; retries: %d.\n", frame.id, drops, retries);
-                    // }
-
-                    bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);    // Send a frame.
+                    sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);    // Send a frame.
                     printf("Frame no. %ld sent\n", frame.id);
+                    
                     // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
                     while (retries <= RETRY_LIMIT)
                     {   
                         bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen, 1);
-                        printf("Bytes recvd: %ld\n", bytes_recvd);
+                        // printf("Bytes recvd: %ld\n", bytes_recvd);
                         if ((bytes_recvd < 0) || (frame.id != ack))
                         {
                             drops++;
-                            bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);
+                            sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);
                             retries++;
                             printf("Frame %ld dropped %d times; retries: %d.\n", frame.id, drops, retries);
                         }
@@ -427,6 +393,8 @@ int main(int argc, char **argv)
                             break; // Got the correct ACK.
                         }
                     }
+
+                    bytes_sent += frame.len;
 
                     if (retries == RETRY_LIMIT)
                     {
@@ -549,12 +517,6 @@ int main(int argc, char **argv)
 
         else if (strcmp(snd_cmd, "exit") == 0)
         {   
-            // printf("Closing UDP client.\n");
-            // close(fd); // Close the socket.
-            // exit(EXIT_SUCCESS);
-
-
-
             int ack = 0;
             int failure_ack = -1;
             printf("Closing the server.\n");
