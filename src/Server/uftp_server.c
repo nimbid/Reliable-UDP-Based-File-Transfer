@@ -107,13 +107,13 @@ static ssize_t my_recv_from(
         if (end - start > timeout)
         {   
             if (no_timeout == 1)
-            {
+            {   printf("No ACK in %ds\n", SHORT_TIMEOUT);
                 return -1;
             }
             else
             {
                 close(socket);
-                print_error("Timed out waiting for response from server.\n");
+                print_error("Timed out waiting for response from client.\n");
             }
         }
     }
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
     while(1)
     {
         bzero(rcvd_msg, BUFFSIZE);   // Zero out the received message buffer before receiving the message.
-        recvlen = recvfrom(fd, rcvd_msg, BUFFSIZE, 0, (struct sockaddr *)&cln_addr, &cln_addrlen); // Receive command.
+        recvlen = my_recv_from(fd, rcvd_msg, BUFFSIZE, 0, (struct sockaddr *)&cln_addr, &cln_addrlen, 1, SHORT_TIMEOUT); // Receive command.
         
         // Check if packet containing command is empty.
         if (recvlen < 0)
