@@ -325,7 +325,7 @@ int main(int argc, char **argv)
                 }
 
                 // Revert socket to blocking.
-                int flags = fcntl(fd, F_GETFL);
+                flags = fcntl(fd, F_GETFL);
                 fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
 
                 printf("File sent succesfully: %ld bytes.\n", bytes_sent);
