@@ -21,7 +21,7 @@
 
 
 #define BUFFSIZE (51200)
-#define TIMEOUT  (4)
+#define TIMEOUT  (8)
 #define RETRY_LIMIT (30)
 
 
