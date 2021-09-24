@@ -18,6 +18,7 @@
 #include <unistd.h> // for close
 #include <dirent.h>
 #include <errno.h>
+#include <time.h>
 
 
 #define BUFFSIZE (51200)
