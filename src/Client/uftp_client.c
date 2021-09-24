@@ -421,7 +421,11 @@ int main(int argc, char **argv)
                             bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);
                             retries++;
                             printf("Frame %ld dropped %d times; retries: %d.\n", frame.id, drops, retries);
-                        } 
+                        }
+                        else
+                        {
+                            break; // Got the correct ACK.
+                        }
                     }
 
                     if (retries == RETRY_LIMIT)
