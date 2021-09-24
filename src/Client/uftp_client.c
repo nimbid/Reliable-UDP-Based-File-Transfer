@@ -21,7 +21,7 @@
 
 
 #define BUFFSIZE (51200)
-#define TIMEOUT  (10)
+#define TIMEOUT  (8)
 #define RETRY_LIMIT (30)
 
 
@@ -362,6 +362,7 @@ int main(int argc, char **argv)
                     frame.len = fread(frame.data, 1, BUFFSIZE, file_ptr);
 
                     bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);    // Send a frame.
+                    printf("Frame no. %ld sent\n", frame.id);
                     my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen);      // Receive a frame.
 
                     // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
