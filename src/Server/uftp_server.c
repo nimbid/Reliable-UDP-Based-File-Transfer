@@ -134,11 +134,11 @@ int main(int argc, char **argv)
 
     int srv_port = atoi(argv[1]);          // Store server port received in input.
     struct sockaddr_in srv_addr;           // Server address.
-	struct sockaddr_in cln_addr;           // Client address.
+    struct sockaddr_in cln_addr;           // Client address.
     socklen_t cln_addrlen = sizeof(cln_addr);  // Length of addresses.
 
     int recvlen;                           // Bytes received.
-	int fd;				                   // Server socket.
+    int fd;				                   // Server socket.
     struct stat st;                        // Stores the file attributes for GET.
     off_t file_size;                       // File size.
     struct timeval t_out = {0, 0};         // Stores timeout info.
@@ -159,15 +159,15 @@ int main(int argc, char **argv)
 
     // Bind the socket to a valid IP address and port.
     memset(&srv_addr, 0, sizeof(srv_addr));
-	srv_addr.sin_family = AF_INET;
-	srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	srv_addr.sin_port = htons(atoi(argv[1]));
-
-	if (bind(fd, (struct sockaddr *)&srv_addr, sizeof(srv_addr)) < 0) 
+    srv_addr.sin_family = AF_INET;
+    srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    srv_addr.sin_port = htons(atoi(argv[1]));
+    
+    if (bind(fd, (struct sockaddr *)&srv_addr, sizeof(srv_addr)) < 0) 
     {
-		print_error("Bind failed.\n");
-		return 0;
-	}
+        print_error("Bind failed.\n");
+        return 0;
+    }
 
     printf("Server started: Listening on port %d\n", srv_port);
 

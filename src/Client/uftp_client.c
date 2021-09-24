@@ -106,10 +106,10 @@ int main(int argc, char **argv)
     }
 
     struct sockaddr_in srv_addr;           // Server address.
-	struct sockaddr_in cln_addr;           // Client address.
+    struct sockaddr_in cln_addr;           // Client address.
     socklen_t srv_addrlen = sizeof(srv_addr);  // Length of addresses.
-
-	int fd;				                   // Server socket.
+    
+    int fd;				                   // Server socket.
     struct stat st;                        // Stores the file attributes for GET.
     off_t file_size;                       // File size.
     frame_t frame;                         // Structure for storing message frames.
@@ -140,15 +140,15 @@ int main(int argc, char **argv)
     // Print error if bind fails.
     if (bind(fd, (struct sockaddr *)&cln_addr, sizeof(cln_addr)) < 0) 
     {
-		print_error("Bind failed.\n");
-		return 0;
-	}
+        print_error("Bind failed.\n");
+        return 0;
+    }
 
     // Set server address and port.
     memset(&srv_addr, 0, sizeof(srv_addr));
     srv_addr.sin_family = AF_INET;
-	srv_addr.sin_addr.s_addr = inet_addr(argv[1]);
-	srv_addr.sin_port = htons(atoi(argv[2]));
+    srv_addr.sin_addr.s_addr = inet_addr(argv[1]);
+    srv_addr.sin_port = htons(atoi(argv[2]));
 
     printf("Client started.\n");
 
@@ -375,7 +375,7 @@ int main(int argc, char **argv)
 
                     sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);    // Send a frame.
                     printf("Frame no. %ld sent\n", frame.id);
-                    
+
                     // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
                     while (retries <= RETRY_LIMIT)
                     {   
