@@ -54,10 +54,35 @@ static void send_error(int socket, const struct sockaddr *dest_addr, socklen_t d
  * On receiving data-> returns no. of bytes received.
  * On timeout-> closes the socket and exits with an error.
  */
+// static ssize_t my_recv_from(
+//     int socket, void *restrict buffer, size_t length,
+//     int flags, struct sockaddr *restrict address,
+//     socklen_t *restrict address_len)
+// {   
+//     ssize_t nbytes = 0;
+//     time_t start = 0, end = 0;
+//     while ((nbytes = recvfrom(socket, buffer, length, flags, address, address_len)) <= 0)
+//     {   
+//         if (errno == EWOULDBLOCK)
+//         {
+//             end = time(0);
+//             if (start == 0)
+//             {
+//                 start = time(0);
+//             }
+//             if (end - start > TIMEOUT)
+//             {
+//                 close(socket);
+//                 print_error("Timed out waiting for response from server.\n");
+//             }
+//         }
+//     }
+//     return nbytes;
+// }
 static ssize_t my_recv_from(
     int socket, void *restrict buffer, size_t length,
     int flags, struct sockaddr *restrict address,
-    socklen_t *restrict address_len)
+    socklen_t *restrict address_len, int no_timeout)
 {   
     ssize_t nbytes = 0;
     time_t start = 0, end = 0;
@@ -71,9 +96,16 @@ static ssize_t my_recv_from(
                 start = time(0);
             }
             if (end - start > TIMEOUT)
-            {
-                close(socket);
-                print_error("Timed out waiting for response from server.\n");
+            {   
+                if (no_timeout == 1)
+                {
+                    return -1;
+                }
+                else
+                {
+                    close(socket);
+                    print_error("Timed out waiting for response from server.\n");
+                }
             }
         }
     }
@@ -162,7 +194,7 @@ int main(int argc, char **argv)
                 print_error("Couldn't send command.\n");
             }
 
-            my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen); // Receive error.
+            my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, 0); // Receive error.
             // printf("ACK for command received: %d\n", outer_ack);
             if (outer_ack == failure_ack)
             {
@@ -170,7 +202,7 @@ int main(int argc, char **argv)
             }
 
             // Check for read permissions error.
-            my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen);
+            my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, 0);
             // printf("ACK for permission error: %d\n\n", outer_ack);
             if (outer_ack == failure_ack)
             {   
@@ -189,7 +221,7 @@ int main(int argc, char **argv)
                 long int rcvd_bytes = 0;
 
                 // Receive no. of bytes.
-                my_recv_from(fd, &frames_to_receive, sizeof(frames_to_receive), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen); 
+                my_recv_from(fd, &frames_to_receive, sizeof(frames_to_receive), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, 0); 
                 printf("Frames to receive: %ld\n", frames_to_receive);
 
                 if (frames_to_receive > 0)
@@ -206,7 +238,7 @@ int main(int argc, char **argv)
                         // Initialise frame struct with zeros.
                         memset(&frame, 0, sizeof(frame));
 
-                        my_recv_from(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen); // Receive frame.
+                        my_recv_from(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen, 0); // Receive frame.
                         sendto(fd, &frame.id, sizeof(frame.id), 0, (struct sockaddr *)&srv_addr, srv_addrlen);           // Send ACK for frame.
 
                         // If frame ID is repeated, drop it. Keep track using i.
@@ -239,7 +271,7 @@ int main(int argc, char **argv)
                 long int rcvd_bytes = 0;
                 
                 // Receive no. of bytes.
-                my_recv_from(fd, &frames_to_receive, sizeof(frames_to_receive), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen);
+                my_recv_from(fd, &frames_to_receive, sizeof(frames_to_receive), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, 0);
                 printf("Frames to receive: %ld\n", frames_to_receive);
 
                 if (frames_to_receive > 0)
@@ -256,7 +288,7 @@ int main(int argc, char **argv)
                         // Initialise frame struct with zeros.
                         memset(&frame, 0, sizeof(frame));
 
-                        my_recv_from(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen); // Receive frame.
+                        my_recv_from(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen, 0); // Receive frame.
                         sendto(fd, &frame.id, sizeof(frame.id), 0, (struct sockaddr *)&srv_addr, srv_addrlen);           // Send ACK for frame.
 
                         // If frame ID is repeated, drop it. Keep track using i.
@@ -300,7 +332,7 @@ int main(int argc, char **argv)
             }
 
             // // Check for server not receiving command.
-            my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen);
+            my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, 0);
             // printf("ACK for command received: %d\n", outer_ack);
             if (outer_ack == failure_ack)
             {
@@ -312,6 +344,7 @@ int main(int argc, char **argv)
             {
                 long int num_frames = 0;
                 long int bytes_sent = 0;
+                long int bytes_recvd = 0;
                 long int ack = 0;
                 int retries = 0;
                 int drops = 0;
@@ -343,7 +376,7 @@ int main(int argc, char **argv)
                 sendto(fd, &num_frames, sizeof(num_frames), 0, (struct sockaddr *)&srv_addr, srv_addrlen);
 
                 // Check if the server received the expected no. of frames to be sent.
-                my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen);
+                my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, 0);
                 printf("Recd frames ack %d\n", outer_ack);
 
                 // Check for ACK sent by server for frames.
@@ -361,18 +394,33 @@ int main(int argc, char **argv)
                     frame.id = i;
                     frame.len = fread(frame.data, 1, BUFFSIZE, file_ptr);
 
+                    // bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);    // Send a frame.
+                    // printf("Frame no. %ld sent\n", frame.id);
+                    // my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen);      // Receive a frame.
+
+                    // // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
+                    // while ((frame.id != ack) && (retries <= RETRY_LIMIT))
+                    // {   
+                    //     drops++;
+                    //     bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);
+                    //     my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen);
+                    //     retries++;
+                    //     printf("Frame %ld dropped %d times; retries: %d.\n", frame.id, drops, retries);
+                    // }
+
                     bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);    // Send a frame.
                     printf("Frame no. %ld sent\n", frame.id);
-                    my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen);      // Receive a frame.
-
                     // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
-                    while ((frame.id != ack) && (retries <= RETRY_LIMIT))
+                    while (retries <= RETRY_LIMIT)
                     {   
-                        drops++;
-                        bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen);
-                        my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen);
-                        retries++;
-                        printf("Frame %ld dropped %d times; retries: %d.\n", frame.id, drops, retries);
+                        bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, (socklen_t *)&srv_addrlen, 1);
+                        if ((bytes_recvd < 0) || (frame.id != ack))
+                        {
+                            drops++;
+                            bytes_sent += sendto(fd, &frame, sizeof(frame), 0, (struct sockaddr *)&srv_addr, srv_addrlen, 1);
+                            retries++;
+                            printf("Frame %ld dropped %d times; retries: %d.\n", frame.id, drops, retries);
+                        } 
                     }
 
                     if (retries == RETRY_LIMIT)
@@ -415,7 +463,7 @@ int main(int argc, char **argv)
                 print_error("Couldn't send command.\n");
             }
 
-            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen); // Receive error.
+            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen,0); // Receive error.
             // printf("ACK for command received: %d\n", ack);
             if (ack == failure_ack)
             {
@@ -423,7 +471,7 @@ int main(int argc, char **argv)
             }
 
             // Check for error returned by server for whether file exists.
-            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen);
+            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, 0);
             // printf("ACK received: %d\n", ack);
             if (ack == -1)
             {
@@ -453,13 +501,13 @@ int main(int argc, char **argv)
             }
 
             // Check if server received the command.
-            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen); // Receive error.
+            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, 0); // Receive error.
             if (ack == failure_ack)
             {
                 print_error("No command received by server.\n");
             }
 
-            if (my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen) > 0)
+            if (my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, 0) > 0)
             {   
                 if (ack == failure_ack)
                 {
@@ -468,7 +516,7 @@ int main(int argc, char **argv)
             }
 
             // Receive ls output from the server. Send ACK=1 if successful.
-            my_recv_from(fd, ls_output, 1024, 0,  (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen);
+            my_recv_from(fd, ls_output, 1024, 0,  (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, 0);
             // printf("List length recvd: %ld\n", strlen(ls_output));
             // printf("List bytes received: %ld\n", y);
             if (strlen(ls_output) > 0)
