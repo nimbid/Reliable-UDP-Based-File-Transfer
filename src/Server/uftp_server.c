@@ -93,7 +93,7 @@ static int get_file_list(char *list)
 static ssize_t my_recv_from(
     int socket, void *restrict buffer, size_t length,
     int flags, struct sockaddr *restrict address,
-    socklen_t *restrict address_len, int no_timeout, int timeout)
+    socklen_t *restrict address_len, int timeout)
 {   
     ssize_t nbytes = 0;
     time_t start = 0, end = 0;
@@ -106,15 +106,18 @@ static ssize_t my_recv_from(
         }
         if (end - start > timeout)
         {   
-            if (no_timeout == 1)
-            {   
-                return -1;
-            }
-            else
-            {
-                close(socket);
-                print_error("Timed out waiting for response from client.\n");
-            }
+            printf("Timed out waiting for response from client.\n");
+            return -1;
+            // if (no_timeout == 1)
+            // {   
+            //     return -1;
+            // }
+            // else
+            // {
+            //     // close(socket);
+            //     printf("Timed out waiting for response from client.\n");
+            //     return 0;
+            // }
         }
     }
     return nbytes;
@@ -175,7 +178,7 @@ int main(int argc, char **argv)
     while(1)
     {
         bzero(rcvd_msg, BUFFSIZE);   // Zero out the received message buffer before receiving the message.
-        recvlen = my_recv_from(fd, rcvd_msg, BUFFSIZE, 0, (struct sockaddr *)&cln_addr, &cln_addrlen, 1, SHORT_TIMEOUT); // Receive command.
+        recvlen = my_recv_from(fd, rcvd_msg, BUFFSIZE, 0, (struct sockaddr *)&cln_addr, &cln_addrlen, SHORT_TIMEOUT); // Receive command.
         
         // Check if packet containing command is empty.
         if (recvlen < 0)
@@ -267,7 +270,8 @@ int main(int argc, char **argv)
                 // Check for ACK sent by server for frames.
                 if (outer_ack <= 0)
                 {
-                    print_error("Error sending num_frames to server.\n");
+                    printf("Error sending num_frames to server.\n");
+                    continue;
                 }
 
                 // Set socket as non-blocking temporarily for use with my_recv_from().
@@ -290,7 +294,7 @@ int main(int argc, char **argv)
                     // Send each frame and retry until it is acknowledged, as long as retries < RETRY_LIMIT.
                     while (retries <= RETRY_LIMIT)
                     {   
-                        bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen, 1, SHORT_TIMEOUT);
+                        bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&cln_addr, (socklen_t *)&cln_addrlen, SHORT_TIMEOUT);
                         if ((bytes_recvd < 0) || (frame.id != ack))
                         {
                             drops++;
@@ -317,7 +321,8 @@ int main(int argc, char **argv)
                     // In case of timeout, fail the file transfer.
                     if (is_timed_out == 1)
                     {
-                        print_error("File not sent. GET failed.\n");
+                        printf("File not sent. GET failed.\n");
+                        break;
                     }
 
                     // printf("Frame %ld; ACK %ld\n", frame.id, ack);
@@ -335,7 +340,7 @@ int main(int argc, char **argv)
                 setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&t_out, sizeof(struct timeval));  // Disable timeout.
             }
             else
-            {   // Have the server return an error message to the client. If the client receives this, it should print error and exit.
+            {   // Have the server return an error message to the client.
                 printf("Invalid filename.\n");
                 send_error(fd, (struct sockaddr *)&cln_addr, cln_addrlen);
             }
