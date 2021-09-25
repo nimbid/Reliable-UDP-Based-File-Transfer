@@ -304,20 +304,6 @@ int main(int argc, char **argv)
             int failure_ack = -1;
             int outer_ack = 0;
             printf("Sending file: %s\n", snd_filename);
-
-            // Send command to server.
-            if ((sendto(fd, rcvd_cmd, sizeof(rcvd_cmd), 0, (struct sockaddr *)&srv_addr, srv_addrlen) < 0))
-            {
-                print_error("Couldn't send command.\n");
-            }
-
-            // // Check for server not receiving command.
-            my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, 0, TIMEOUT);
-            // printf("ACK for command received: %d\n", outer_ack);
-            if (outer_ack == failure_ack)
-            {
-                print_error("No command received by server.\n");
-            }
             
             // Check if that file exists and has read permissions.
             if ((access(snd_filename, F_OK) == 0) && access(snd_filename, R_OK) == 0)
@@ -329,6 +315,20 @@ int main(int argc, char **argv)
                 int retries = 0;
                 int drops = 0;
                 int is_timed_out = 0;
+
+                // Send command to server.
+                if ((sendto(fd, rcvd_cmd, sizeof(rcvd_cmd), 0, (struct sockaddr *)&srv_addr, srv_addrlen) < 0))
+                {
+                    print_error("Couldn't send command.\n");
+                }
+
+                // // Check for server not receiving command.
+                my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, 0, TIMEOUT);
+                // printf("ACK for command received: %d\n", outer_ack);
+                if (outer_ack == failure_ack)
+                {
+                    print_error("No command received by server.\n");
+                }
 
                 if (stat(snd_filename, &st) < 0)
                 {
