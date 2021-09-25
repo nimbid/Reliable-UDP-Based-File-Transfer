@@ -589,7 +589,7 @@ int main(int argc, char **argv)
 
         else
         {
-            print_error("Unknown command.\n");
+            printf("Unknown command.\n");
             send_error(fd, (struct sockaddr *)&cln_addr, cln_addrlen);
         }
 
