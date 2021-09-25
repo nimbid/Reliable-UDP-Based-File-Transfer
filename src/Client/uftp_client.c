@@ -157,6 +157,7 @@ int main(int argc, char **argv)
         {   
             int failure_ack = -1;
             int outer_ack = 0;
+            long int bytes_recvd = 0;
             printf("Getting file: %s\n", snd_filename);
 
             // Send command to server.
@@ -165,7 +166,9 @@ int main(int argc, char **argv)
                 print_error("Couldn't send command.\n");
             }
 
-            my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT); // Receive error.
+            bytes_recvd = my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT); // Receive error.
+            if (bytes_recvd < 0)
+                continue;    
             // printf("ACK for command received: %d\n", outer_ack);
             if (outer_ack == failure_ack)
             {
@@ -174,7 +177,9 @@ int main(int argc, char **argv)
             }
 
             // Check for read permissions error.
-            my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT);
+            bytes_recvd = my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT);
+            if (bytes_recvd < 0)
+                continue;    
             // printf("ACK for permission error: %d\n\n", outer_ack);
             if (outer_ack == failure_ack)
             {   
@@ -195,7 +200,9 @@ int main(int argc, char **argv)
                 long int rcvd_bytes = 0;
 
                 // Receive no. of bytes.
-                my_recv_from(fd, &frames_to_receive, sizeof(frames_to_receive), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, TIMEOUT); 
+                bytes_recvd = my_recv_from(fd, &frames_to_receive, sizeof(frames_to_receive), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, TIMEOUT);
+                if (bytes_recvd < 0)
+                    continue;     
                 printf("Frames to receive: %ld\n", frames_to_receive);
 
                 if (frames_to_receive > 0)
@@ -247,7 +254,9 @@ int main(int argc, char **argv)
                 long int rcvd_bytes = 0;
                 
                 // Receive no. of bytes.
-                my_recv_from(fd, &frames_to_receive, sizeof(frames_to_receive), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, TIMEOUT);
+                bytes_recvd = my_recv_from(fd, &frames_to_receive, sizeof(frames_to_receive), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, TIMEOUT);
+                if (bytes_recvd < 0)
+                    continue;    
                 printf("Frames to receive: %ld\n", frames_to_receive);
 
                 if (frames_to_receive > 0)
@@ -320,7 +329,9 @@ int main(int argc, char **argv)
                 }
 
                 // // Check for server not receiving command.
-                my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT);
+                bytes_recvd = my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT);
+                if (bytes_recvd < 0)
+                    continue;    
                 // printf("ACK for command received: %d\n", outer_ack);
                 if (outer_ack == failure_ack)
                 {
@@ -354,7 +365,9 @@ int main(int argc, char **argv)
                 sendto(fd, &num_frames, sizeof(num_frames), 0, (struct sockaddr *)&srv_addr, srv_addrlen);
 
                 // Check if the server received the expected no. of frames to be sent.
-                my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, TIMEOUT);
+                bytes_recvd = my_recv_from(fd, &outer_ack, sizeof(outer_ack), 0, (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, TIMEOUT);
+                if (bytes_recvd < 0)
+                    continue;    
                 printf("Recd frames ack %d\n", outer_ack);
 
                 // Check for ACK sent by server for frames.
@@ -363,7 +376,8 @@ int main(int argc, char **argv)
                     printf("File empty error from server.\n");
                     continue;
                 }
-                
+
+                bytes_recvd = 0;
                 // If server ACKs expected no. of frames, proceed with sending data.
                 for (int i =1; i <= num_frames; i++)
                 {
@@ -430,6 +444,7 @@ int main(int argc, char **argv)
         {   
             int ack = 0;
             int failure_ack = -1;
+            long int bytes_recvd = 0;
             printf("Deleting file: %s\n", snd_filename);
 
             // Send DEL command to server.
@@ -438,7 +453,9 @@ int main(int argc, char **argv)
                 print_error("Couldn't send command.\n");
             }
 
-            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT); // Receive error.
+            bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT); // Receive error.
+            if (bytes_recvd < 0)
+                continue;    
             // printf("ACK for command received: %d\n", ack);
             if (ack == failure_ack)
             {
@@ -447,7 +464,9 @@ int main(int argc, char **argv)
             }
 
             // Check for error returned by server for whether file exists.
-            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT);
+            bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT);
+            if (bytes_recvd < 0)
+                continue;    
             // printf("ACK received: %d\n", ack);
             if (ack == -1)
             {
@@ -468,6 +487,7 @@ int main(int argc, char **argv)
             int ack = 0;
             int failure_ack = -1;
             int success_ack = 1;
+            long int bytes_recvd = 0;
             char ls_output[1024];
             memset(ls_output, 0, sizeof(ls_output)); // Write zeros to the file_list.
 
@@ -478,14 +498,16 @@ int main(int argc, char **argv)
             }
 
             // Check if server received the command.
-            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT); // Receive error.
+            bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT); // Receive error.
+            if (bytes_recvd < 0)
+                continue;    
             if (ack == failure_ack)
             {
                 printf("No command received by server.\n");
                 continue;
             }
 
-            if (my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT) > 0)
+            if ((bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT)) > 0)
             {   
                 if (ack == failure_ack)
                 {
@@ -494,8 +516,13 @@ int main(int argc, char **argv)
                 }
             }
 
+            if (bytes_recvd < 0)
+                continue;    
+
             // Receive ls output from the server. Send ACK=1 if successful.
-            my_recv_from(fd, ls_output, 1024, 0,  (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, TIMEOUT);
+            bytes_recvd = my_recv_from(fd, ls_output, 1024, 0,  (struct sockaddr *) &srv_addr, (socklen_t *) &srv_addrlen, TIMEOUT);
+            if (bytes_recvd < 0)
+                continue;    
             // printf("List length recvd: %ld\n", strlen(ls_output));
             // printf("List bytes received: %ld\n", y);
             if (strlen(ls_output) > 0)
@@ -526,6 +553,7 @@ int main(int argc, char **argv)
         {   
             int ack = 0;
             int failure_ack = -1;
+            long int bytes_recvd = 0;
             printf("Closing the server.\n");
 
             // Send DEL command to server.
@@ -534,7 +562,9 @@ int main(int argc, char **argv)
                 print_error("Couldn't send command.\n");
             }
 
-            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT); // Receive error.
+            bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT); // Receive error.
+            if (bytes_recvd < 0)
+                continue;    
             // printf("ACK for command received: %d\n", ack);
             if (ack == failure_ack)
             {
@@ -555,14 +585,16 @@ int main(int argc, char **argv)
         {   // Send command to sevrer. If unknown, print error and ask for correct input.
             int ack = 0;
             int failure_ack = -1;
-
+            long int bytes_recvd = 0;
             // Send command to server.
             if ((sendto(fd, rcvd_cmd, sizeof(rcvd_cmd), 0, (struct sockaddr *)&srv_addr, srv_addrlen) < 0))
             {
                 print_error("Couldn't send command.\n");
             }
 
-            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT); // Receive error.
+            bytes_recvd = my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT); // Receive error.
+            if (bytes_recvd < 0)
+                continue;    
             // printf("ACK for command received: %d\n", ack);
             if (ack == failure_ack)
             {
@@ -571,7 +603,9 @@ int main(int argc, char **argv)
             }
             
             // Get response from server.
-            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT);
+            bytes_recvd =  my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, TIMEOUT);
+            if (bytes_recvd < 0)
+                continue;    
             if (ack == failure_ack)
             {
                 printf("Unknown command. Please choose one from the given list.\n");
