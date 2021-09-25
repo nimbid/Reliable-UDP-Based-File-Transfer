@@ -545,13 +545,31 @@ int main(int argc, char **argv)
         /* **************************** Handle Invalid Cases **************************** */
 
         else
-        {   // If user input is an invalid command, ask for input again.
-            printf("Unknown command. Please choose one from the given list.\n");
-            continue;
+        {   // Send command to sevrer. If unknown, print error and ask for correct input.
+            int ack = 0;
+            int failure_ack = -1;
+
+            // Send command to server.
+            if ((sendto(fd, rcvd_cmd, sizeof(rcvd_cmd), 0, (struct sockaddr *)&srv_addr, srv_addrlen) < 0))
+            {
+                print_error("Couldn't send command.\n");
+            }
+
+            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, 0, TIMEOUT); // Receive error.
+            // printf("ACK for command received: %d\n", ack);
+            if (ack == failure_ack)
+            {
+                print_error("No command received by server.\n");
+            }
+            
+            // Get response from server.
+            my_recv_from(fd, &ack, sizeof(ack), 0, (struct sockaddr *)&srv_addr, &srv_addrlen, 0, TIMEOUT);
+            if (ack == failure_ack)
+            {
+                printf("Unknown command. Please choose one from the given list.\n");
+                continue;
+            }
         }
-
-        printf("Nothing else left.\n");
-
     } //end of while
 
     // Exit process after closing the socket.
