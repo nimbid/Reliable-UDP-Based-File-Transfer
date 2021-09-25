@@ -192,8 +192,10 @@ int main(int argc, char **argv)
             if (outer_ack == failure_ack)
             {   
                 if (outer_ack == failure_ack)
+                {
                     printf("No permission to read file.\n");
                     continue;
+                }
             }
 
             // Check if that file exists locally and has write permissions; else create a new file.
