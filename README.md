@@ -5,7 +5,7 @@ A client and server implementation of UDP-based file transfer. The protocol used
 The project is a part of CSCI 5273: Network Systems.
 
 ## Reliability
-Reliability is implemented using a STOP-AND-WAIT protocol that uses per frame acknowledgements. Also included are a re-try mechanism and timeouts on both client and server. The server implements a blocking socket while the client implements both non-blocking and blocking socket as needed.
+Reliability is implemented using a STOP-AND-WAIT protocol that uses per frame acknowledgements. Also included are a re-try mechanism and timeouts on both client and server. The client implements a non-blocking socket while the server implements both non-blocking and blocking sockets as needed.
 
 ## Commands
 Five commands have been implemented: 
