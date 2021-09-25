@@ -83,12 +83,9 @@ static int get_file_list(char *list)
 /* Custom implementation of recvfrom() that polls a non-blocking
  * socket for data until timeout is reached.
  *
- * Special parameters: no_timeout-> 1 if function should not exit() on timeout;
- *                               -> 0 if function should exit() on timeout.
- *                        timeout-> integer value representing timeout in sec.
+ * Special parameters: timeout-> integer value representing timeout in sec.
  * On receiving data-> returns no. of bytes received.
- * On timeout-> If no_timeout=0, exit with error.
- *              If no_timeout=1, return -1.
+ * On timeout-> returns -1.
  */
 static ssize_t my_recv_from(
     int socket, void *restrict buffer, size_t length,
@@ -108,16 +105,6 @@ static ssize_t my_recv_from(
         {   
             printf("Timed out waiting for response from client.\n");
             return -1;
-            // if (no_timeout == 1)
-            // {   
-            //     return -1;
-            // }
-            // else
-            // {
-            //     // close(socket);
-            //     printf("Timed out waiting for response from client.\n");
-            //     return 0;
-            // }
         }
     }
     return nbytes;
