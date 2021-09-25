@@ -22,7 +22,7 @@
 
 #define BUFFSIZE (51200)
 #define TIMEOUT  (8)
-#define SHORT_TIMEOUT (2)
+#define SHORT_TIMEOUT (2) // To be used by sender to resend ACKs.
 #define RETRY_LIMIT (30)
 
 
@@ -53,9 +53,9 @@ static void send_error(int socket, const struct sockaddr *dest_addr, socklen_t d
 /* Custom implementation of recvfrom() that polls a non-blocking
  * socket for data until timeout is reached.
  *
- * Special parameters: no_timeout-> 1 if function should not exit()
- * on timeout; 0 otherwise.
- * 
+ * Special parameters: no_timeout-> 1 if function should not exit() on timeout;
+ *                               -> 0 if function should exit() on timeout.
+ *                        timeout-> integer value representing timeout in sec.
  * On receiving data-> returns no. of bytes received.
  * On timeout-> If no_timeout=0, exit with error.
  *              If no_timeout=1, return -1.
@@ -79,7 +79,7 @@ static ssize_t my_recv_from(
             if (end - start > timeout)
             {   
                 if (no_timeout == 1)
-                {   printf("No ACK for %ds\n", SHORT_TIMEOUT);
+                {   
                     return -1;
                 }
                 else
@@ -129,8 +129,8 @@ int main(int argc, char **argv)
     }
 
     // Set socket as non-blocking.
-    int flags = fcntl(fd, F_GETFL);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    int socket_flags = fcntl(fd, F_GETFL);
+    fcntl(fd, F_SETFL, socket_flags | O_NONBLOCK);
 
     // Bind the socket to a valid client IP address and port.
     memset(&cln_addr, 0, sizeof(cln_addr));
